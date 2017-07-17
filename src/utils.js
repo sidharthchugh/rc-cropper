@@ -1,14 +1,13 @@
 /**
-   * 获取图片消息容器尺寸
-   * @param {Number} oriW - 图片的实际宽度
-   * @param {Number} oriH - 图片的实际高度
-   * @param {Object} sizeLimit - 图片尺寸限制 { maxW: 358, maxH: 320, minW: 34, minH: 34 }
+   * Get image contaniner size
+   * @param {Number} originalWidth
+   * @param {Number} originalHeight
+   * @param {Object} sizeLimit - { maxW: 358, maxH: 320, minW: 34, minH: 34 }
    */
-export function getImgContainerSize (oriW, oriH, sizeLimit) {
-  oriW = parseInt(oriW, 10)
-  oriH = parseInt(oriH, 10)
+export function getImgContainerSize (originalWidth, originalHeight, sizeLimit) {
+  const oriW = parseInt(originalWidth, 10)
+  const oriH = parseInt(originalHeight, 10)
 
-  // 异常处理：没有oriW oriH
   if (!oriW || !oriH) {
     return {
       w: 'auto',
@@ -16,7 +15,7 @@ export function getImgContainerSize (oriW, oriH, sizeLimit) {
     }
   }
 
-  const naturalSize = { // 图片的实际大小
+  const naturalSize = {
     w: oriW,
     h: oriH
   }

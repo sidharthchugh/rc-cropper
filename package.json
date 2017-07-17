@@ -5,7 +5,7 @@
   "main": "dist/rc-cropper.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint ./",
+    "lint": "eslint ./src",
     "build": "babel ./src/rc-cropper.js --out-file dist/rc-cropper.js",
     "prepublish": "npm run build",
     "prebuild": "npm run lint",

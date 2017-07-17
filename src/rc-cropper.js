@@ -20,18 +20,15 @@ export default class CropperCore extends Component {
         height: ''
       },
       cropDetail: {},
-      previewSrc: '',
-      imgSize: {},
       loaded: false
     })
     this.state = this._getInitialState()
     this.cropped = false
     this.cropper = null
     this.image = null
+    this.container = null
     this.imgSize = {}
 
-    this.initiate = this._initiate.bind(this)
-    this.initCropper = this._initCropper.bind(this)
     this.zoomIn = this._zoom.bind(this, props.zoomStep)
     this.zoomOut = this._zoom.bind(this, -1 * props.zoomStep)
     this.moveLeft = this._move.bind(this, -1 * props.moveStep, 0)
@@ -40,25 +37,20 @@ export default class CropperCore extends Component {
     this.moveDown = this._move.bind(this, 0, props.moveStep)
     this.rotate = this._rotate.bind(this, props.rotateStep)
     this.rotateAnti = this._rotate.bind(this, -1 * props.rotateStep)
-    this.preview = this._preview.bind(this)
-    this.getCroppedImageData = this._getCroppedImageData.bind(this)
     this.getCroppedCanvas = this._getCroppedCanvas.bind(this)
-    this.setContainerSize = this._setContainerSize.bind(this)
-    this.reset = () => this.cropper && this.cropper.reset()
   }
 
   static propTypes = {
     src: PropTypes.string.isRequired,
-    locale: PropTypes.object, // {originalSize: '原图尺寸'， cropSize: '裁剪尺寸'}
+    locale: PropTypes.object,
     zoomStep: PropTypes.number,
     moveStep: PropTypes.number,
     rotateStep: PropTypes.number,
     outputImgType: PropTypes.string,
     outputImgSize: PropTypes.object,
-    preview: PropTypes.bool,
     showActions: PropTypes.bool,
     className: PropTypes.string,
-    options: PropTypes.object, // 参见 https://github.com/fengyuanchen/cropperjs/blob/master/README.md#options
+    options: PropTypes.object, // see https://github.com/fengyuanchen/cropperjs/blob/master/README.md#options
     containerSizeLimit: PropTypes.object
   };
 
@@ -73,7 +65,6 @@ export default class CropperCore extends Component {
     rotateStep: 45,
     outputImgType: 'png',
     outputImgSize: {},
-    preview: false,
     showActions: false,
     className: '',
     options: {},
@@ -93,8 +84,8 @@ export default class CropperCore extends Component {
         },
         loaded: true
       })
-      this.setContainerSize(img)
-      this.initCropper(props)
+      this._setContainerSize(img)
+      this._initCropper(props)
     }
   }
 
@@ -149,14 +140,14 @@ export default class CropperCore extends Component {
 
   componentDidMount () {
     if (this.props.src) {
-      this.initiate(this.props)
+      this._initiate(this.props)
     }
   }
 
   componentDidUpdate (prevProps, prevState) {
-    // image需要挂载之后才能去初始化cropper，故放到didUpdate中执行
+    // the cropper should initiate after image was mounted
     if (prevProps.src !== this.props.src) {
-      this.initiate(this.props)
+      this._initiate(this.props)
     }
   }
 
@@ -176,8 +167,8 @@ export default class CropperCore extends Component {
       width: containerSize.w,
       height: containerSize.h
     }
-    // 立即设置容器的大小，而不是通过setState来设置
-    // 因为初始化cropper时候会根据容器尺寸设置cropper的尺寸
+    // set the container size immediately,
+    // because the cropper need the size to intiate it's cropper box
     this.container.style.width = containerSize.w + 'px'
     this.container.style.height = containerSize.h + 'px'
   }
@@ -197,32 +188,11 @@ export default class CropperCore extends Component {
     this.cropper.rotate(deg)
   }
 
-  _getCroppedImageData () {
-    return new Promise(resolve => {
-      const canvas = this._getCroppedCanvas()
-      if (!canvas) {
-        resolve(null) // not cropped
-      }
-
-      const { outputImgType } = this.props
-      const dataURL = canvas.toDataURL(`image/${outputImgType}`)
-      canvas.toBlob(blob => {
-        resolve({ dataURL, blob })
-      })
-    })
-  }
-
   _getCroppedCanvas (options) {
     const { outputImgSize } = this.props
     return this.cropped
       ? this.cropper.getCroppedCanvas({ ...outputImgSize, ...options })
       : null
-  }
-
-  _preview () {
-    this.setState({
-      previewSrc: this.getCroppedImageData()
-    })
   }
 
   _processSrc (src) {
@@ -231,7 +201,7 @@ export default class CropperCore extends Component {
 
   render () {
     const { src, locale, showActions, className, outputImgSize } = this.props
-    const { imgInfo, loaded, cropDetail, previewSrc } = this.state
+    const { imgInfo, loaded, cropDetail } = this.state
     const { imgSize } = this
 
     const cls = 'crop-container ' + className
@@ -264,7 +234,6 @@ export default class CropperCore extends Component {
           <div className="btns">
             { showActions ? this._renderActions() : null }
           </div>
-          {previewSrc ? <img src={previewSrc} /> : null}
         </div>
       </div>
     )
@@ -272,20 +241,17 @@ export default class CropperCore extends Component {
 
   _getOutputSize (cropDetail, outputSize) {
     if (!outputSize.width && !outputSize.height) {
-      // 未指定输出尺寸
+      // not specified output size
       return cropDetail
     } else if (outputSize.width && outputSize.height) {
-       // 指定输出尺寸
       return outputSize
     } else if (outputSize.width && !outputSize.height) {
-       // 只指定了宽度
       const height = outputSize.width / (cropDetail.width / cropDetail.height)
       return {
         ...outputSize,
         height
       }
     } else {
-      // 只指定高度
       const width = outputSize.height * (cropDetail.width / cropDetail.height)
       return {
         ...outputSize,
