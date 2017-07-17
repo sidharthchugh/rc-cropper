@@ -1,12 +1,20 @@
-# react-cropper
+# rc-cropper
 
 [Cropperjs](https://github.com/fengyuanchen/cropperjs) as React components
+
+Inspired by [react-cropper](https://github.com/roadmanfong/react-cropper)
 
 ## Docs
 
 * [Image Cropper](https://github.com/fengyuanchen/cropper)
 
 ## Installation
+Install via [npm](https://www.npmjs.com/package/rc-cropper)
+
+```shell
+npm install --save rc-cropper
+```
+
 
 ## Quick Example
 ```js
