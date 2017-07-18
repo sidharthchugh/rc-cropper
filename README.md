@@ -55,7 +55,7 @@ rotateStep | number | 45deg | rotate step
 showActions | bool | false | whether show action buttons, support zoom/move/rotate
 outputImgSize | object | | specify the output canvas size, format: {width: *, height: *}
 containerSizeLimit | object | {  maxWidth: 500, maxHeight: 500, minWidth: 50, minHeight: 50} | the size limitation of image container
-options | object |  | options from [cropperjs](https://github.com/fengyuanchen/cropper)
+options | object |  | options for [cropperjs](https://github.com/fengyuanchen/cropper)
 
 Note:
 * If `outputImgSize` is specified and no `aspectRatio` specified in `options`, rc-cropper will caculate the `aspectRatio` based on `outputImgSize` automatically. `aspectRation = outputImgSize.width / outputImgSize.height`
