@@ -40,36 +40,36 @@ export default class CropperCore extends Component {
     this.getCroppedCanvas = this._getCroppedCanvas.bind(this)
   }
 
-  static propTypes = {
-    src: PropTypes.string.isRequired,
-    locale: PropTypes.object,
-    zoomStep: PropTypes.number,
-    moveStep: PropTypes.number,
-    rotateStep: PropTypes.number,
-    outputImgType: PropTypes.string,
-    outputImgSize: PropTypes.object,
-    showActions: PropTypes.bool,
-    className: PropTypes.string,
-    options: PropTypes.object, // see https://github.com/fengyuanchen/cropperjs/blob/master/README.md#options
-    containerSizeLimit: PropTypes.object
-  };
+  componentDidMount () {
+    if (this.props.src) {
+      this._initiate(this.props)
+    }
+  }
 
-  static defaultProps = {
-    locale: {
-      originalSize: 'Original Size: ',
-      cropSize: 'Output Size: ',
-      loading: 'Loading...'
-    },
-    zoomStep: 0.2,
-    moveStep: 2,
-    rotateStep: 45,
-    outputImgType: 'png',
-    outputImgSize: {},
-    showActions: false,
-    className: '',
-    options: {},
-    containerSizeLimit: SIZE_LIMIT
-  };
+  componentWillReceiveProps (nextProps) {
+    if (this.props.src !== nextProps.src) {
+      if (this.cropper) {
+        this.cropper.destroy()
+      }
+      this.setState({
+        ...this._getInitialState()
+      })
+      this.cropped = false
+    }
+  }
+
+  componentDidUpdate (prevProps) {
+    // the cropper should initiate after image was mounted
+    if (prevProps.src !== this.props.src) {
+      this._initiate(this.props)
+    }
+  }
+
+  componentWillUnmount () {
+    if (this.image) {
+      this.cropper.destroy()
+    }
+  }
 
   _initiate (props) {
     let { src } = props
@@ -123,38 +123,9 @@ export default class CropperCore extends Component {
       }
     })
 
-    this.image.addEventListener('cropstart', e => {
+    this.image.addEventListener('cropstart', () => {
       this.cropped = true
     })
-  }
-
-  componentWillReceiveProps (nextProps) {
-    if (this.props.src !== nextProps.src) {
-      this.cropper && this.cropper.destroy()
-      this.setState({
-        ...this._getInitialState()
-      })
-      this.cropped = false
-    }
-  }
-
-  componentDidMount () {
-    if (this.props.src) {
-      this._initiate(this.props)
-    }
-  }
-
-  componentDidUpdate (prevProps, prevState) {
-    // the cropper should initiate after image was mounted
-    if (prevProps.src !== this.props.src) {
-      this._initiate(this.props)
-    }
-  }
-
-  componentWillUnmount () {
-    if (this.image) {
-      this.cropper.destroy()
-    }
   }
 
   _setContainerSize (img) {
@@ -169,8 +140,8 @@ export default class CropperCore extends Component {
     }
     // set the container size immediately,
     // because the cropper need the size to intiate it's cropper box
-    this.container.style.width = containerSize.w + 'px'
-    this.container.style.height = containerSize.h + 'px'
+    this.container.style.width = `${containerSize.w}px`
+    this.container.style.height = `${containerSize.h}px`
   }
 
   _zoom (ratio) {
@@ -199,46 +170,6 @@ export default class CropperCore extends Component {
     return src ? src.replace(/size=\d+&?/, '') : src
   }
 
-  render () {
-    const { src, locale, showActions, className, outputImgSize } = this.props
-    const { imgInfo, loaded, cropDetail } = this.state
-    const { imgSize } = this
-
-    const cls = 'crop-container ' + className
-    const originalSrc = this._processSrc(src)
-
-    const outputSize = this._getOutputSize(cropDetail, outputImgSize)
-    const containerCls = 'img-container' + (loaded ? '' : ' not-loaded')
-
-    return (
-      <div className={cls}>
-        <div ref={c => { this.container = c }} className={containerCls} style={imgSize}>
-          <img
-            src={originalSrc}
-            ref={img => { this.image = img }} />
-          <div className="img-loading-mask">
-            <span>{locale.loading}</span>
-          </div>
-        </div>
-        <div className="actions">
-          <div className="info">
-            <span className="fl">
-              <span>{locale.originalSize}</span>
-              <span>{`${imgInfo.width} * ${imgInfo.height}`}</span>
-            </span>
-            <span className="fr">
-              <span>{locale.cropSize}</span>
-              <span>{`${Math.floor(outputSize.width || 0)} * ${Math.floor(outputSize.height || 0)}`}</span>
-            </span>
-          </div>
-          <div className="btns">
-            { showActions ? this._renderActions() : null }
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   _getOutputSize (cropDetail, outputSize) {
     if (!outputSize.width && !outputSize.height) {
       // not specified output size
@@ -251,12 +182,11 @@ export default class CropperCore extends Component {
         ...outputSize,
         height
       }
-    } else {
-      const width = outputSize.height * (cropDetail.width / cropDetail.height)
-      return {
-        ...outputSize,
-        width
-      }
+    }
+    const width = outputSize.height * (cropDetail.width / cropDetail.height)
+    return {
+      ...outputSize,
+      width
     }
   }
 
@@ -280,4 +210,78 @@ export default class CropperCore extends Component {
       </span>
     )
   }
+
+  render () {
+    const { src, locale, showActions, className, outputImgSize } = this.props
+    const { imgInfo, loaded, cropDetail } = this.state
+    const { imgSize } = this
+
+    const cls = `crop-container ${className}`
+    const originalSrc = this._processSrc(src)
+
+    const outputSize = this._getOutputSize(cropDetail, outputImgSize)
+    const containerCls = `img-container${loaded ? '' : ' not-loaded'}`
+
+    return (
+      <div className={cls}>
+        <div ref={c => { this.container = c }} className={containerCls} style={imgSize}>
+          <img
+            src={originalSrc}
+            ref={img => { this.image = img }}
+          />
+          <div className="img-loading-mask">
+            <span>{locale.loading}</span>
+          </div>
+        </div>
+        <div className="actions">
+          <div className="info">
+            <span className="fl">
+              <span>{locale.originalSize}</span>
+              <span>{`${imgInfo.width} * ${imgInfo.height}`}</span>
+            </span>
+            <span className="fr">
+              <span>{locale.cropSize}</span>
+              <span>
+                {`${Math.floor(outputSize.width || 0)} * ${Math.floor(outputSize.height || 0)}`}
+              </span>
+            </span>
+          </div>
+          <div className="btns">
+            { showActions ? this._renderActions() : null }
+          </div>
+        </div>
+      </div>
+    )
+  }
+}
+
+CropperCore.propTypes = {
+  src: PropTypes.string.isRequired,
+  locale: PropTypes.object,
+  zoomStep: PropTypes.number,
+  moveStep: PropTypes.number,
+  rotateStep: PropTypes.number,
+  outputImgType: PropTypes.string,
+  outputImgSize: PropTypes.object,
+  showActions: PropTypes.bool,
+  className: PropTypes.string,
+  options: PropTypes.object, // see https://github.com/fengyuanchen/cropperjs/blob/master/README.md#options
+  containerSizeLimit: PropTypes.object
+}
+
+CropperCore.defaultProps = {
+  locale: {
+    originalSize: 'Original Size: ',
+    cropSize: 'Output Size: ',
+    loading: 'Loading...'
+  },
+  zoomStep: 0.2,
+  moveStep: 2,
+  rotateStep: 45,
+  outputImgType: 'png',
+  outputImgSize: {},
+  showActions: false,
+  className: '',
+  options: {},
+  containerSizeLimit: SIZE_LIMIT
 }

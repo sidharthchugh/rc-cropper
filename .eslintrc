@@ -4,5 +4,11 @@
     "space-before-function-paren": ["error", "always"],
     "semi": ["error", "never"],
     "comma-dangle": ["error", "never"]
+  },
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true
+    }
   }
 }
