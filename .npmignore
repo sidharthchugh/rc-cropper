@@ -1,2 +1,11 @@
 example/
-src/
+.editorconfig
+.eslintignore
+.eslintrc
+.gitignore
+.npmignore
+build-css.js
+server.js
+webpack.config.dev.js
+
+

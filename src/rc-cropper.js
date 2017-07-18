@@ -135,13 +135,13 @@ export default class CropperCore extends Component {
     }
     const containerSize = $h.getImgContainerSize(img.width, img.height, limit)
     this.imgSize = {
-      width: containerSize.w,
-      height: containerSize.h
+      width: `${containerSize.w}px`,
+      height: `${containerSize.h}px`
     }
     // set the container size immediately,
     // because the cropper need the size to intiate it's cropper box
-    this.container.style.width = `${containerSize.w}px`
-    this.container.style.height = `${containerSize.h}px`
+    this.container.style.width = this.imgSize.width
+    this.container.style.height = this.imgSize.height
   }
 
   _zoom (ratio) {
