@@ -6,16 +6,18 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint ./src",
-    "build": "babel ./src/rc-cropper.js --out-file dist/rc-cropper.js",
+    "build:js": "babel ./src -d dist",
+    "build:css": "node ./build-css.js",
+    "build": "npm run build:js && npm run build:css",
     "prepublish": "npm run build",
     "prebuild": "npm run lint",
     "build-example": "npm run build && webpack --config webpack.config.js",
     "start": "babel-node server.js"
   },
   "author": "xiefei89 <xiefei890721@gmail.com>",
-  "homepage": "http://roadmanfong.github.io/react-cropper/",
+  "homepage": "https://github.com/xiefei89/rc-cropper/",
   "bugs": {
-    "url": "https://github.com/roadmanfong/react-cropper/issues"
+    "url": "https://github.com/xiefei89/rc-cropper/issues"
   },
   "keywords": [
     "react",
@@ -26,7 +28,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/roadmanfong/react-cropper.git"
+    "url": "https://github.com/xiefei89/rc-cropper.git"
   },
   "dependencies": {
     "cropperjs": "^1.0.0-rc.3",
