@@ -30,6 +30,7 @@ export default class CropperCore extends Component {
     this.image = null
     this.container = null
     this.imgSize = {}
+    this.isCropperReady = true
 
     this.zoomIn = this._zoom.bind(this, props.zoomStep)
     this.zoomOut = this._zoom.bind(this, -1 * props.zoomStep)
@@ -96,7 +97,7 @@ export default class CropperCore extends Component {
   }
 
   _initCropper (props) {
-    const { outputImgSize } = props
+    const { outputImgSize, onReady } = props
     const options = {
       // aspectRatio: 16 / 9,
       autoCrop: true,
@@ -105,10 +106,6 @@ export default class CropperCore extends Component {
       minContainerWidth: 50,
       minContainerHeight: 50,
       ...props.options
-    }
-
-    if (options.autoCrop) {
-      this.cropped = true
     }
 
     if (!options.aspectRatio && outputImgSize.width && outputImgSize.height) {
@@ -120,7 +117,12 @@ export default class CropperCore extends Component {
       ready: () => {
         if (options.autoCrop) {
           this.cropper.crop()
+          this.cropped = true
         }
+        if (onReady) {
+          onReady()
+        }
+        this.isCropperReady = true
       },
       crop: e => {
         this.setState({
@@ -167,7 +169,7 @@ export default class CropperCore extends Component {
 
   _getCroppedCanvas (options) {
     const { outputImgSize } = this.props
-    return this.cropped
+    return this.cropper && this.cropped && this.isCropperReady
       ? this.cropper.getCroppedCanvas({ ...outputImgSize, ...options })
       : null
   }
@@ -271,7 +273,8 @@ CropperCore.propTypes = {
   showActions: PropTypes.bool,
   className: PropTypes.string,
   options: PropTypes.object, // see https://github.com/fengyuanchen/cropperjs/blob/master/README.md#options
-  containerSizeLimit: PropTypes.object
+  containerSizeLimit: PropTypes.object,
+  onReady: PropTypes.func
 }
 
 CropperCore.defaultProps = {
