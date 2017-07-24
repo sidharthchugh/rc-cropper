@@ -23,7 +23,7 @@ export default class CropperCore extends Component {
       loaded: false
     })
 
-    this.isMounted = false
+    this._isMounted = false
     this.state = this._getInitialState()
     this.cropped = false
     this.cropper = null
@@ -46,7 +46,7 @@ export default class CropperCore extends Component {
     if (this.props.src) {
       this._initiate(this.props)
     }
-    this.isMounted = true
+    this._isMounted = true
   }
 
   componentWillReceiveProps (nextProps) {
@@ -72,7 +72,7 @@ export default class CropperCore extends Component {
     if (this.cropper) {
       this.cropper.destroy()
     }
-    this.isMounted = false
+    this._isMounted = false
   }
 
   _initiate (props) {
@@ -81,7 +81,7 @@ export default class CropperCore extends Component {
     const img = new Image()
     img.src = src
     img.onload = () => {
-      if (this.isMounted) {
+      if (this._isMounted) {
         this.setState({
           imgInfo: {
             width: img.width,
