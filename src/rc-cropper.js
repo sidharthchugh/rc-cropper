@@ -22,6 +22,8 @@ export default class CropperCore extends Component {
       cropDetail: {},
       loaded: false
     })
+
+    this.isMounted = false
     this.state = this._getInitialState()
     this.cropped = false
     this.cropper = null
@@ -44,6 +46,7 @@ export default class CropperCore extends Component {
     if (this.props.src) {
       this._initiate(this.props)
     }
+    this.isMounted = true
   }
 
   componentWillReceiveProps (nextProps) {
@@ -66,9 +69,10 @@ export default class CropperCore extends Component {
   }
 
   componentWillUnmount () {
-    if (this.image) {
+    if (this.cropper) {
       this.cropper.destroy()
     }
+    this.isMounted = false
   }
 
   _initiate (props) {
@@ -77,15 +81,17 @@ export default class CropperCore extends Component {
     const img = new Image()
     img.src = src
     img.onload = () => {
-      this.setState({
-        imgInfo: {
-          width: img.width,
-          height: img.height
-        },
-        loaded: true
-      })
-      this._setContainerSize(img)
-      this._initCropper(props)
+      if (this.isMounted) {
+        this.setState({
+          imgInfo: {
+            width: img.width,
+            height: img.height
+          },
+          loaded: true
+        })
+        this._setContainerSize(img)
+        this._initCropper(props)
+      }
     }
   }
 
