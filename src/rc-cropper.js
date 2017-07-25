@@ -41,6 +41,8 @@ export default class CropperCore extends Component {
     this.rotate = this._rotate.bind(this, props.rotateStep)
     this.rotateAnti = this._rotate.bind(this, -1 * props.rotateStep)
     this.getCroppedCanvas = this._getCroppedCanvas.bind(this)
+    this.handleInputWidth = this._handleInputWidth.bind(this)
+    this.handleInputHeight = this._handleInputHeight.bind(this)
   }
 
   componentDidMount () {
@@ -198,6 +200,36 @@ export default class CropperCore extends Component {
     }
   }
 
+  _parseInput (e) {
+    let val = parseInt(e.target.value, 10)
+    if (isNaN(val) || val < 1) {
+      val = 1
+    }
+    return val
+  }
+
+  _handleInputWidth (e) {
+    const val = this._parseInput(e)
+    const imgData = this.cropper.getImageData()
+    const ratio = imgData.width / imgData.naturalWidth
+    const lastCropData = this.cropper.getCropBoxData()
+    this.cropper.setCropBoxData({
+      ...lastCropData,
+      width: val * ratio
+    })
+  }
+
+  _handleInputHeight (e) {
+    const val = this._parseInput(e)
+    const imgData = this.cropper.getImageData()
+    const ratio = imgData.width / imgData.naturalWidth
+    const lastCropData = this.cropper.getCropBoxData()
+    this.cropper.setCropBoxData({
+      ...lastCropData,
+      height: val * ratio
+    })
+  }
+
   _renderActions () {
     return (
       <span>
@@ -223,6 +255,9 @@ export default class CropperCore extends Component {
     const { src, locale, showActions, className, outputImgSize } = this.props
     const { imgInfo, loaded, cropDetail } = this.state
     const { imgSize } = this
+    const cropBoxEditable = outputImgSize && (outputImgSize.width || outputImgSize.height)
+      ? false
+      : this.props.cropBoxEditable
 
     const cls = `crop-container ${className}`
     const originalSrc = this._processSrc(src)
@@ -249,9 +284,25 @@ export default class CropperCore extends Component {
             </span>
             <span className="fr">
               <span>{locale.cropSize}</span>
-              <span>
-                {`${Math.floor(outputSize.width || 0)} * ${Math.floor(outputSize.height || 0)}`}
-              </span>
+              {
+                cropBoxEditable
+                ? <input
+                  value={Math.round(outputSize.width || 0)}
+                  onChange={this.handleInputWidth}
+                  pattern="[0-9]"
+                />
+                : <span>{Math.round(outputSize.width || 0)}</span>
+              }
+              <span style={{ margin: '0 3px' }}> * </span>
+              {
+                cropBoxEditable
+                ? <input
+                  value={Math.round(outputSize.height || 0)}
+                  onChange={this.handleInputHeight}
+                  pattern="[0-9]"
+                />
+                : <span>{Math.round(outputSize.height || 0)}</span>
+              }
             </span>
           </div>
           <div className="btns">
@@ -274,7 +325,8 @@ CropperCore.propTypes = {
   className: PropTypes.string,
   options: PropTypes.object, // see https://github.com/fengyuanchen/cropperjs/blob/master/README.md#options
   containerSizeLimit: PropTypes.object,
-  onReady: PropTypes.func
+  onReady: PropTypes.func,
+  cropBoxEditable: PropTypes.bool
 }
 
 CropperCore.defaultProps = {
@@ -290,5 +342,6 @@ CropperCore.defaultProps = {
   showActions: false,
   className: '',
   options: {},
-  containerSizeLimit: SIZE_LIMIT
+  containerSizeLimit: SIZE_LIMIT,
+  cropBoxEditable: true
 }

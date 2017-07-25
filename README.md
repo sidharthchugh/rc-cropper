@@ -52,9 +52,11 @@ locale | object | | for i18n
 zoomStep | number | 0.2 | zoom step
 moveStep | number | 2px | move step
 rotateStep | number | 45deg | rotate step
+onReady | function |  | callback when the cropper is ready
 showActions | bool | false | whether show action buttons, support zoom/move/rotate
 outputImgSize | object | | specify the output canvas size, format: {width: *, height: *}
 containerSizeLimit | object | {  maxWidth: 500, maxHeight: 500, minWidth: 50, minHeight: 50} | the size limitation of image container
+cropBoxEditable | bool | true | Whether the cropbox width and height can edit by input. If `outputImgSize` is set, this property would be invaild
 options | object |  | options for [cropperjs](https://github.com/fengyuanchen/cropper)
 
 Note:

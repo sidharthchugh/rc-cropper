@@ -5,8 +5,8 @@
 .img-container {
   display: inline-block;
   position: relative;
-  min-width: 50px;
-  min-height: 50px;
+  min-width: 240px;
+  min-height: 320px;
 }
 
 .img-container.not-loaded {
@@ -44,6 +44,13 @@
 .crop-container .actions {
   margin-top: 50px;
 }
+
+.crop-container .actions input {
+  width: 50px;
+  border: 1px solid #bbc8d8;
+  padding: 0 2px;
+}
+
 
 .crop-container .btns {
   text-align: center;
