@@ -69,6 +69,12 @@ export function isBlobURL (url) {
 }
 
 export function loadImageByXHR (url, callback) {
+  /* eslint-disable */
+  // NOTE:
+  // For CORS image, IE10 cannot read data from the output canvas of cropperjs by function canvas.msToBlob.
+  // There is a workaround for that via XMLHttpRequest and URL.createObjectURL.
+  // ref: https://stackoverflow.com/questions/16956295/ie10-and-cross-origin-resource-sharing-cors-issues-with-image-canvas
+  /* eslint-enable */
   const xhr = new XMLHttpRequest()
   window.URL = window.URL || window.webkitURL
   xhr.onload = function onLoad () {
