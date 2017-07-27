@@ -20,7 +20,8 @@ export default class CropperCore extends Component {
         height: ''
       },
       cropDetail: {},
-      loaded: false
+      imgLoaded: false,
+      src: undefined
     })
 
     this._isMounted = false
@@ -30,7 +31,7 @@ export default class CropperCore extends Component {
     this.image = null
     this.container = null
     this.imgSize = {}
-    this.isCropperReady = true
+    this.isCropperReady = false
 
     this.zoomIn = this._zoom.bind(this, props.zoomStep)
     this.zoomOut = this._zoom.bind(this, -1 * props.zoomStep)
@@ -43,6 +44,7 @@ export default class CropperCore extends Component {
     this.getCroppedCanvas = this._getCroppedCanvas.bind(this)
     this.handleInputWidth = this._handleInputWidth.bind(this)
     this.handleInputHeight = this._handleInputHeight.bind(this)
+    this.handleImgLoaded = this._handleImgLoaded.bind(this)
   }
 
   componentDidMount () {
@@ -54,48 +56,73 @@ export default class CropperCore extends Component {
 
   componentWillReceiveProps (nextProps) {
     if (this.props.src !== nextProps.src) {
-      if (this.cropper) {
-        this.cropper.destroy()
-      }
+      $h.log('rc-cropper src changed')
+      this.destroy()
       this.setState({
         ...this._getInitialState()
       })
       this.cropped = false
-    }
-  }
 
-  componentDidUpdate (prevProps) {
-    // the cropper should initiate after image was mounted
-    if (prevProps.src !== this.props.src) {
-      this._initiate(this.props)
+      this._initiate(nextProps)
+    } else if (!this.props.shouldRender &&
+        nextProps.shouldRender &&
+        this.state.imgLoaded &&
+        !this.cropper) {
+      $h.log('rc-cropper init by receive props')
+      this._initCropper(nextProps)
     }
   }
 
   componentWillUnmount () {
-    if (this.cropper) {
-      this.cropper.destroy()
-    }
+    this.destroy()
     this._isMounted = false
   }
 
+  destroy () {
+    if (this.cropper) {
+      $h.log('rc-cropper destroy')
+      this.cropper.destroy()
+      this.cropper = null
+    }
+
+    const { src } = this.state
+    if (src && $h.isBlobURL(src)) {
+      $h.log('rc-cropper revoke url')
+      URL.revokeObjectURL(src)
+    }
+  }
+
   _initiate (props) {
-    let { src } = props
-    src = this._processSrc(src)
-    const img = new Image()
-    img.src = src
-    img.onload = () => {
+    const { src } = props
+
+    const onLoad = image => {
       if (this._isMounted) {
         this.setState({
           imgInfo: {
-            width: img.width,
-            height: img.height
+            width: image.width,
+            height: image.height
           },
-          loaded: true
+          src: image.src
         })
-        this._setContainerSize(img)
-        this._initCropper(props)
+        this._setContainerSize(image)
       }
     }
+
+    if ($h.isCrossOriginURL(src)) {
+      $h.loadImageByXHR(src, url => {
+        this._loadImage(url, onLoad)
+      })
+    } else {
+      this._loadImage(src, onLoad)
+    }
+  }
+
+  _loadImage (src, callback) {
+    const img = new Image()
+    img.onload = () => {
+      callback(img)
+    }
+    img.src = src
   }
 
   _initCropper (props) {
@@ -127,6 +154,7 @@ export default class CropperCore extends Component {
         this.isCropperReady = true
       },
       crop: e => {
+        $h.log(111, e.detail)
         this.setState({
           cropDetail: e.detail || {}
         })
@@ -230,6 +258,15 @@ export default class CropperCore extends Component {
     })
   }
 
+  _handleImgLoaded () {
+    this.setState({
+      imgLoaded: true
+    })
+    if (this.props.shouldRender) {
+      this._initCropper(this.props)
+    }
+  }
+
   _renderActions () {
     return (
       <span>
@@ -251,30 +288,42 @@ export default class CropperCore extends Component {
     )
   }
 
+  _renderImage () {
+    const { src } = this.state
+    const { locale } = this.props
+    if (src) {
+      return (
+        <img
+          src={src}
+          onLoad={this.handleImgLoaded}
+          crossOrigin="anonymous"
+          ref={img => { this.image = img }}
+        />
+      )
+    }
+    return (
+      <div className="img-loading-mask">
+        <span>{locale.loading}</span>
+      </div>
+    )
+  }
+
   render () {
-    const { src, locale, showActions, className, outputImgSize } = this.props
-    const { imgInfo, loaded, cropDetail } = this.state
+    const { locale, showActions, className, outputImgSize } = this.props
+    const { imgInfo, cropDetail } = this.state
     const { imgSize } = this
     const cropBoxEditable = outputImgSize && (outputImgSize.width || outputImgSize.height)
       ? false
       : this.props.cropBoxEditable
 
     const cls = `crop-container ${className}`
-    const originalSrc = this._processSrc(src)
 
     const outputSize = this._getOutputSize(cropDetail, outputImgSize)
-    const containerCls = `img-container${loaded ? '' : ' not-loaded'}`
 
     return (
       <div className={cls}>
-        <div ref={c => { this.container = c }} className={containerCls} style={imgSize}>
-          <img
-            src={originalSrc}
-            ref={img => { this.image = img }}
-          />
-          <div className="img-loading-mask">
-            <span>{locale.loading}</span>
-          </div>
+        <div ref={c => { this.container = c }} className="img-container" style={imgSize}>
+          { this._renderImage() }
         </div>
         <div className="actions">
           <div className="info">
@@ -289,7 +338,7 @@ export default class CropperCore extends Component {
                 ? <input
                   value={Math.round(outputSize.width || 0)}
                   onChange={this.handleInputWidth}
-                  pattern="[0-9]"
+                  pattern="[0-9]+"
                 />
                 : <span>{Math.round(outputSize.width || 0)}</span>
               }
@@ -299,7 +348,7 @@ export default class CropperCore extends Component {
                 ? <input
                   value={Math.round(outputSize.height || 0)}
                   onChange={this.handleInputHeight}
-                  pattern="[0-9]"
+                  pattern="[0-9]+"
                 />
                 : <span>{Math.round(outputSize.height || 0)}</span>
               }
@@ -326,7 +375,8 @@ CropperCore.propTypes = {
   options: PropTypes.object, // see https://github.com/fengyuanchen/cropperjs/blob/master/README.md#options
   containerSizeLimit: PropTypes.object,
   onReady: PropTypes.func,
-  cropBoxEditable: PropTypes.bool
+  cropBoxEditable: PropTypes.bool,
+  shouldRender: PropTypes.bool  // whether initiate the cropper immediateley
 }
 
 CropperCore.defaultProps = {
@@ -343,5 +393,6 @@ CropperCore.defaultProps = {
   className: '',
   options: {},
   containerSizeLimit: SIZE_LIMIT,
-  cropBoxEditable: true
+  cropBoxEditable: true,
+  shouldRender: true
 }

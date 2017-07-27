@@ -57,6 +57,7 @@ showActions | bool | false | whether show action buttons, support zoom/move/rota
 outputImgSize | object | | specify the output canvas size, format: {width: *, height: *}
 containerSizeLimit | object | {  maxWidth: 500, maxHeight: 500, minWidth: 50, minHeight: 50} | the size limitation of image container
 cropBoxEditable | bool | true | Whether the cropbox width and height can edit by input. If `outputImgSize` is set, this property would be invaild
+shouldRender | bool | true | should initiate the cropper instance, the cropper instance will be intiated when `shouldRender` become `true` and the image is loaded.
 options | object |  | options for [cropperjs](https://github.com/fengyuanchen/cropper)
 
 Note:

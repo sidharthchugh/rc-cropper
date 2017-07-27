@@ -50,3 +50,37 @@ export function getImgContainerSize (originalWidth, originalHeight, sizeLimit) {
     h: Math.max(minH, containerSize.h)
   }
 }
+
+const REGEXP_ORIGINS = /^(https?:)\/\/([^:/?#]+):?(\d*)/i
+export function isCrossOriginURL (url) {
+  const parts = url.match(REGEXP_ORIGINS)
+
+  return parts && (
+    parts[1] !== location.protocol ||
+    parts[2] !== location.hostname ||
+    parts[3] !== location.port
+  )
+}
+
+export function isBlobURL (url) {
+  // IE10: blob:73E64064-4C5C-49BE-A795-1ACA65C819F4
+  // chrome: blob:http://localhost:3001/691af608-087e-466d-8f64-2ff423f29f4d
+  return /^blob:(https?:\/\/)?/i.test(url)
+}
+
+export function loadImageByXHR (url, callback) {
+  const xhr = new XMLHttpRequest()
+  window.URL = window.URL || window.webkitURL
+  xhr.onload = function onLoad () {
+    callback(URL.createObjectURL(this.response))
+  }
+  xhr.open('GET', url, true)
+  xhr.responseType = 'blob'
+  xhr.send()
+}
+
+export function log (...args) {
+  /* eslint-disable */
+  console.log.apply(console, args)
+  /* eslint-enable */
+}
